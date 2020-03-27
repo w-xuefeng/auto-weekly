@@ -8,7 +8,7 @@
 
 ## 配置
 
-```json
+```js
 {
   "dailyPath": "./daily", // 日报的路径
   "nameRules": "(?<name>[\\W]*)\\s(?<date>(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))", // 日报的命名规则

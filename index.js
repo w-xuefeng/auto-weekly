@@ -1,6 +1,6 @@
 const fs = require('fs')
 const xlsx = require('node-xlsx')
-const xlsxStyle = require('xlsx-style')
+// const xlsxStyle = require('xlsx-style')
 const config = require('./config.json')
 const { summary, nameRules, dailyPath, sheet } = config
 
