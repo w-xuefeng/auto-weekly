@@ -1,0 +1,19 @@
+{
+  "dailyPath": "./daily",
+  "nameRules": "(?<name>[\\W]*)\\s(?<date>(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2}))",
+  "summary": {
+    "outputEnable": true,
+    "showInCMD": true,
+    "outputDir": "./week",
+    "outputName": "{{ _nameRules.name }}{{ 周总结 }}{{ }}{{ _date.from.replace(/-/g, '.') }}{{-}}{{ _date.to.replace(/-/g, '.') }}",
+    "outputExt": [".xlsx", ".txt", ".json"],
+    "title": "{{ _nameRules.date }} {{ _sheet.project }}",
+    "content": "{{ _sheet.content }}",
+    "weekday": 5,
+    "from": "{{ 2020-03-27 }}"
+  },
+  "sheet": {
+    "project": [1, 0],
+    "content": [1, 1]
+  }
+}
