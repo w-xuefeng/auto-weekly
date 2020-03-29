@@ -50,10 +50,10 @@ const getDateList = () => {
 
 const readFile = () => {
   const dateList = getDateList()
-  console.log("周总结日期：")
+  console.log('周总结日期：')
   console.log(dateList)
   return readFileName(dailyPath).map(e => {
-    if (e.item.match(nameRules) && e.item.match(nameRules)) {
+    if (e.item.match(nameRules) && e.item.match(nameRules).groups) {
       return {
         ...e,
         ...e.item.match(nameRules).groups
@@ -84,42 +84,52 @@ const readExcel = (files, _date) => {
   return { title, content: contents, output, outputName}
 }
 
-const writeFile = (finalData, finalDataString, fileExt) => {
-  summary.outputEnable && (fs.existsSync(summary.outputDir) || fs.mkdir(summary.outputDir, err => {
-    if (err) throw err
-    fs.writeFileSync(`${finalData[0].output}${fileExt}`, finalDataString)
-  })) && fs.writeFileSync(`${finalData[0].output}${fileExt}`, finalDataString)
+const writeFile = (finalData, finalDataString, fileExt, options = undefined) => {
+  if (!summary.outputEnable) {
+    return
+  }
+  if (!fs.existsSync(summary.outputDir)) {
+    fs.mkdirSync(summary.outputDir)
+  }
+  fs.writeFileSync(`${finalData[0].output}${fileExt}`, finalDataString, options)
+}
+
+const outputFile = (finalData, fileExts) => {
+  let finalDataString = null
+  if (fileExts.includes('.json')) {
+    finalDataString = JSON.stringify(finalData.map(e => ({ title: e.title, content: e.content })), null, 2)
+    writeFile(finalData, finalDataString, '.json')
+  }
+  if (fileExts.includes('.txt')) {
+    finalDataString = finalData.map(e => (`${e.title}\r\n${e.content}`)).join('\r\n\r\n')
+    writeFile(finalData, finalDataString, '.txt')
+  }
+  if (fileExts.includes('.xlsx')) {
+    const data = [['时间/项目', '工作内容']];
+    for (let item of finalData) {
+      data.push([item.title, item.content])
+    }
+    const buffer = xlsx.build([{ name: finalData[0].outputName, data }]);
+    writeFile(finalData, buffer, '.xlsx', { 'flag': 'w' })
+  }
+  return finalDataString
 }
 
 const output = () => {
   const files = readFile()
   const _date = { from: files[0].date, to: files[files.length - 1].date }
   const finalData = files.map(e => readExcel(e, _date))
-  let finalDataString = null
-  if (summary.outputExt.includes('.json')) {
-    finalDataString = JSON.stringify(finalData.map(e => ({ title: e.title, content: e.content })), null, 2)
-    writeFile(finalData, finalDataString, '.json')
-  }
-  if (summary.outputExt.includes('.txt')) {
-    finalDataString = finalData.map(e => (`${e.title}\r\n${e.content}`)).join('\r\n\r\n')
-    writeFile(finalData, finalDataString, '.txt')
-  }
-  if (summary.outputExt.includes('.xlsx')) {
-    const data = [
-      ['时间/项目', '工作内容']
-    ];
-    for (let item of finalData) {
-      data.push([item.title, item.content])
-    }
-    const buffer = xlsx.build([{ name: finalData[0].outputName, data }]);
-    summary.outputEnable && (fs.existsSync(summary.outputDir) || fs.mkdir(summary.outputDir, err => {
-      if (err) throw err
-      fs.writeFileSync(`${finalData[0].output}${'.xlsx'}`, buffer, { 'flag': 'w' })
-    })) && fs.writeFileSync(`${finalData[0].output}${'.xlsx'}`, buffer, { 'flag': 'w' })
-  }
+  const finalDataString = outputFile(finalData, summary.outputExt)
   if (summary.showInCMD) {
-    console.log("周总结内容如下：")
+    console.log('\n')
+    console.log('周总结内容如下：')
     console.log(finalDataString || finalData)
+    console.log('\n')
+  }
+  if (summary.outputEnable) {
+    summary.outputExt.forEach(e => {
+      console.log(`[生成文件]${finalData[0].output}${e}`)
+    })
   }
 }
 
